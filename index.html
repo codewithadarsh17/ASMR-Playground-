@@ -1,0 +1,1035 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>ASMR Playground</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=VT323&display=swap" rel="stylesheet">
+<style>
+/* Layout: one hardware unit on a sage desk mat. Top panel holds a live waveform screen, a volume knob, a sound switch and a joy meter. Below it a row of six pads picks the toy, and a dark play deck holds the active toy. Single look by choice, so every colour is set explicitly. */
+:root {
+  --mat: #9AA395;
+  --shell: #D6D9DA;
+  --shell-hi: #E9EBEC;
+  --shell-lo: #A8ADAF;
+  --deck: #1F2226;
+  --deck-2: #2B2F33;
+  --deck-line: #3A3F44;
+  --ink: #16181A;
+  --ink-soft: #474D51;
+  --deck-ink: #DADEE0;
+  --deck-soft: #98A0A5;
+  --amber: #FFB320;
+  --cobalt: #2D50F0;
+  --tomato: #F2552C;
+  --paper: #ECEEEE;
+  --font-ui: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-lcd: "VT323", "Courier New", monospace;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body {
+  background: repeating-linear-gradient(45deg, rgba(0,0,0,.035) 0 1px, transparent 1px 7px), var(--mat);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.4;
+}
+button { font-family: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--cobalt); outline-offset: 3px; }
+
+.app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding-block: 22px 30px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* shell */
+.shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: clamp(16px, 3.4vw, 30px);
+  border-radius: 18px;
+  background: linear-gradient(180deg, var(--shell-hi), var(--shell));
+  box-shadow: inset 0 1px 0 #fff, inset 0 -3px 0 rgba(0,0,0,.12), 0 2px 0 rgba(0,0,0,.25), 0 30px 40px -14px rgba(0,0,0,.5);
+}
+.screw { position: absolute; width: 11px; height: 11px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #F7F8F8, #8E9396); box-shadow: 0 1px 1px rgba(0,0,0,.4); }
+.screw::after { content: ""; position: absolute; left: 2px; right: 2px; top: 50%; height: 1.5px; margin-top: -.75px; background: rgba(0,0,0,.45); transform: rotate(35deg); }
+.screw.tl { top: 9px; left: 9px; } .screw.tr { top: 9px; right: 9px; }
+.screw.bl { bottom: 9px; left: 9px; } .screw.br { bottom: 9px; right: 9px; }
+
+.head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-inline: 6px; }
+h1 { margin: 0; font-weight: 800; font-stretch: 125%; font-size: clamp(26px, 5.6vw, 40px); line-height: 1; letter-spacing: -.015em; text-shadow: 0 1px 0 rgba(255,255,255,.7); text-wrap: balance; }
+.tag { margin: 6px 0 0; color: var(--ink-soft); font-size: 14px; font-weight: 500; }
+.grille { flex: none; width: 84px; height: 44px; border-radius: 8px; background: radial-gradient(circle, #5C6266 1.6px, transparent 2.2px) 0 0 / 9px 9px; box-shadow: inset 0 2px 4px rgba(0,0,0,.25); }
+
+/* top panel */
+.panel { display: flex; flex-wrap: wrap; gap: 14px; align-items: stretch; }
+.lcd { position: relative; flex: 1 1 300px; min-width: 0; height: 108px; border-radius: 8px; background: #0D0F11; overflow: hidden; box-shadow: inset 0 3px 8px #000, 0 0 0 3px var(--shell-lo), 0 1px 0 3px rgba(255,255,255,.6); }
+.lcd canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.lcd::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 3px); }
+.lcd-text { position: absolute; left: 14px; right: 14px; top: 8px; display: flex; flex-direction: column; gap: 2px; font-family: var(--font-lcd); font-size: 25px; line-height: 1; z-index: 1; }
+.lcd-row { display: flex; justify-content: space-between; gap: 12px; color: var(--amber); }
+.lcd-status { color: #A9B0B4; font-size: 22px; }
+
+.cluster { display: flex; align-items: center; gap: 20px; padding: 10px 18px; border-radius: 10px; background: rgba(0,0,0,.07); box-shadow: inset 0 1px 3px rgba(0,0,0,.2), 0 1px 0 rgba(255,255,255,.6); }
+.ctl { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.lab { font-size: 12px; font-weight: 600; color: var(--ink-soft); }
+
+.knob { position: relative; width: 74px; height: 74px; cursor: ns-resize; touch-action: none; border-radius: 50%; }
+.knob svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.knob .cap { position: absolute; left: 14px; top: 14px; width: 46px; height: 46px; border-radius: 50%; background: conic-gradient(from 20deg, #F4F5F5, #B3B8BB, #F4F5F5, #9EA4A7, #F4F5F5); box-shadow: 0 4px 6px rgba(0,0,0,.35), inset 0 0 0 2px rgba(255,255,255,.6); }
+.knob .cap i { position: absolute; left: 50%; top: 4px; width: 4px; height: 13px; margin-left: -2px; border-radius: 2px; background: var(--ink); }
+
+.sound { width: 54px; height: 40px; border: 0; border-radius: 8px; cursor: pointer; display: grid; place-items: center; background: linear-gradient(180deg, #F1F3F3, #C9CDCF); box-shadow: inset 0 1px 0 #fff, 0 3px 0 #8E9396, 0 5px 5px rgba(0,0,0,.2); transition: transform .06s, box-shadow .06s; }
+.sound:active { transform: translateY(2px); box-shadow: inset 0 1px 0 #fff, 0 1px 0 #8E9396; }
+.led { width: 9px; height: 9px; border-radius: 50%; background: #7C8286; box-shadow: inset 0 1px 1px rgba(0,0,0,.4); transition: background .12s, box-shadow .12s; }
+.sound[aria-checked="true"] .led { background: var(--amber); box-shadow: 0 0 9px var(--amber); }
+
+.joy { display: flex; gap: 3px; align-items: flex-end; height: 40px; }
+.joy i { width: 7px; border-radius: 2px; background: #6E7478; box-shadow: inset 0 1px 1px rgba(0,0,0,.35); transition: background .12s, box-shadow .12s; }
+.joy i:nth-child(n+1) { height: 14px; } .joy i:nth-child(n+4) { height: 20px; } .joy i:nth-child(n+7) { height: 27px; } .joy i:nth-child(n+10) { height: 34px; }
+.joy i.on { background: var(--amber); box-shadow: 0 0 6px rgba(255,179,32,.8); }
+.joy i.on.hot { background: var(--tomato); box-shadow: 0 0 6px rgba(242,85,44,.8); }
+
+/* pads */
+.pads { display: grid; grid-template-columns: repeat(7, 1fr); gap: clamp(6px, 1.6vw, 12px); }
+.pad { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; padding: 10px 2px 9px; border: 0; border-radius: 9px; cursor: pointer; background: linear-gradient(180deg, #F1F3F3, #C9CDCF); box-shadow: inset 0 1px 0 #fff, 0 4px 0 #8E9396, 0 7px 7px rgba(0,0,0,.2); transition: transform .06s, box-shadow .06s; font-size: 12px; font-weight: 600; line-height: 1.1; }
+.pad svg { width: 24px; height: 24px; fill: none; stroke: var(--ink); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.pad[aria-selected="true"] { transform: translateY(3px); box-shadow: inset 0 2px 5px rgba(0,0,0,.22), 0 1px 0 #8E9396; background: linear-gradient(180deg, #C4C8CA, #D3D6D8); }
+.pad[aria-selected="true"] .led { background: var(--amber); box-shadow: 0 0 9px var(--amber); }
+
+/* deck */
+.deck { position: relative; border-radius: 12px; padding: clamp(16px, 3.4vw, 30px) clamp(12px, 3vw, 28px); min-height: 480px; background: radial-gradient(circle, #353A3F 1px, transparent 1.4px) 0 0 / 18px 18px, var(--deck); color: var(--deck-ink); box-shadow: inset 0 4px 14px rgba(0,0,0,.65), 0 1px 0 rgba(255,255,255,.7); }
+.station { display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%; }
+.hint { margin: 0; font-size: 14px; font-weight: 500; color: var(--deck-soft); text-align: center; text-wrap: balance; max-width: 46ch; }
+.btn { border: 0; border-radius: 8px; padding: 11px 22px; font-weight: 700; font-size: 14px; cursor: pointer; background: var(--amber); color: var(--ink); box-shadow: 0 4px 0 #A56F00; }
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #A56F00; }
+.btn:disabled { opacity: .55; cursor: default; }
+.sel { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.sel button { position: relative; border: 0; border-radius: 7px; padding: 10px 14px 10px 31px; cursor: pointer; background: var(--deck-2); color: var(--deck-ink); font-size: 14px; font-weight: 600; box-shadow: inset 0 0 0 1px var(--deck-line), 0 3px 0 #0E1012; }
+.sel button::before { content: ""; position: absolute; left: 12px; top: 50%; width: 9px; height: 9px; margin-top: -4.5px; border-radius: 50%; background: #4A5055; }
+.sel button[aria-pressed="true"]::before { background: var(--amber); box-shadow: 0 0 9px var(--amber); }
+
+/* keyboard */
+.typed { width: min(100%, 560px); min-height: 44px; border-radius: 6px; padding: 8px 14px; background: #0D0F11; box-shadow: inset 0 2px 6px #000, 0 0 0 2px var(--deck-line); display: flex; align-items: center; font: 24px/1.1 var(--font-lcd); color: var(--amber); white-space: pre; overflow: hidden; }
+.typed span:empty::before { content: "Press any key"; color: #6F777C; }
+.typed::after { content: ""; flex: none; width: 10px; height: 18px; margin-left: 3px; background: var(--amber); }
+.kb { --cap: #2D50F0; --edge: #1A2F99; --leg: #fff; display: flex; flex-direction: column; align-items: center; gap: clamp(5px, 1.4vw, 9px); width: min(100%, 640px); padding: clamp(10px, 2.5vw, 18px); border-radius: 12px; background: #2B2F33; box-shadow: inset 0 0 0 1px var(--deck-line), 0 12px 22px rgba(0,0,0,.45); touch-action: manipulation; }
+.kb[data-kind="clacky"] { --cap: #ECEEEE; --edge: #8E9396; --leg: #16181A; }
+.kb[data-kind="creamy"] { --cap: #FFB320; --edge: #A56F00; --leg: #16181A; }
+.krow { display: flex; justify-content: center; gap: inherit; width: 100%; }
+.key { flex: 1 1 0; max-width: 54px; aspect-ratio: 1; padding: 0; border: 0; border-radius: 8px; background: var(--edge); position: relative; cursor: pointer; user-select: none; -webkit-user-select: none; }
+.key .cap { position: absolute; inset: 0 0 6px 0; border-radius: 7px; background: var(--cap); display: grid; place-items: center; font-weight: 700; font-size: clamp(11px, 3vw, 15px); color: var(--leg); box-shadow: inset 0 2px 0 rgba(255,255,255,.4); transition: transform .06s; }
+.key.down .cap { transform: translateY(5px); }
+.key.space { flex: 0 1 64%; max-width: none; aspect-ratio: auto; height: clamp(34px, 9vw, 46px); }
+.key.space .cap { font-size: 12px; font-weight: 600; }
+
+/* bubbles, shared */
+.bub { display: block; width: 100%; aspect-ratio: 1; padding: 0; border: 0; border-radius: 50%; cursor: pointer; }
+.board { touch-action: none; user-select: none; -webkit-user-select: none; }
+.popit-frame { width: min(100%, 400px); }
+.popit-frame.flip-out { animation: flipOut .28s ease-in forwards; }
+.popit-frame.flip-in { animation: flipIn .38s ease-out; }
+@keyframes flipOut { from { transform: perspective(900px) rotateY(0); } to { transform: perspective(900px) rotateY(90deg) scale(.96); } }
+@keyframes flipIn { from { transform: perspective(900px) rotateY(-90deg) scale(.96); } to { transform: perspective(900px) rotateY(0); } }
+.popit { display: grid; grid-template-columns: repeat(6, 1fr); gap: clamp(8px, 2.4vw, 13px); padding: clamp(12px, 3vw, 18px); border-radius: 22px; background: #3A3F44; box-shadow: inset 0 0 0 2px #4A5055, 0 14px 22px rgba(0,0,0,.5); }
+.popit .bub { background: radial-gradient(circle at 34% 28%, rgba(255,255,255,.7) 0 9%, transparent 10%), var(--b); box-shadow: inset -3px -5px 8px rgba(0,0,0,.25), 0 4px 0 rgba(0,0,0,.45); transition: transform .07s, box-shadow .07s; }
+.popit .bub.popped { transform: translateY(3px) scale(.94); background: radial-gradient(circle at 64% 70%, rgba(255,255,255,.3) 0 9%, transparent 10%), var(--b); box-shadow: inset 3px 5px 9px rgba(0,0,0,.55); filter: brightness(.82); }
+.sheet { width: min(100%, 400px); padding: 14px; border-radius: 16px; background: rgba(255,255,255,.07); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 14px 22px rgba(0,0,0,.4); transition: opacity .3s; }
+.sheet.fade { opacity: .25; }
+.wrapb { display: grid; grid-template-columns: repeat(7, 1fr); gap: clamp(5px, 1.6vw, 8px); }
+.wrapb .bub { background: radial-gradient(circle at 32% 28%, #fff 0 9%, rgba(255,255,255,.28) 10% 40%, rgba(255,255,255,.07) 74%); border: 1.5px solid rgba(255,255,255,.55); box-shadow: inset -3px -4px 7px rgba(0,0,0,.35), 0 2px 4px rgba(0,0,0,.4); transition: transform .06s; }
+.wrapb .bub.popped { transform: scale(.82); border-color: rgba(255,255,255,.2); background: linear-gradient(30deg, transparent 46%, rgba(255,255,255,.5) 47% 53%, transparent 54%), linear-gradient(-40deg, transparent 46%, rgba(255,255,255,.35) 47% 52%, transparent 53%), rgba(255,255,255,.05); box-shadow: inset 0 1px 3px rgba(0,0,0,.5); }
+
+/* slime */
+.slime-wrap { width: min(100%, 560px); height: clamp(260px, 46vh, 350px); border-radius: 12px; background: #2B2F33; box-shadow: inset 0 0 0 1px var(--deck-line), inset 0 4px 12px rgba(0,0,0,.5); overflow: hidden; }
+.slime-wrap canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+.slime-wrap canvas:active { cursor: grabbing; }
+.chips { display: flex; gap: 10px; }
+.chip { width: 30px; height: 30px; padding: 0; border-radius: 7px; cursor: pointer; border: 2px solid var(--deck-line); box-shadow: 0 3px 0 #0E1012; }
+.chip[aria-pressed="true"] { outline: 3px solid var(--amber); outline-offset: 2px; }
+
+/* switch wall */
+.wall { display: grid; grid-template-columns: repeat(5, 1fr); gap: clamp(16px, 3.6vw, 26px) clamp(8px, 2.4vw, 16px); padding: clamp(18px, 4vw, 30px); width: min(100%, 460px); border-radius: 12px; background: linear-gradient(180deg, #33383C, #2B2F33); box-shadow: inset 0 0 0 1px var(--deck-line), 0 14px 22px rgba(0,0,0,.45); }
+.cell { display: flex; flex-direction: column; align-items: center; gap: 11px; min-width: 0; }
+.cell .led { background: #4A5055; }
+.cell.on .led { background: var(--amber); box-shadow: 0 0 9px var(--amber); }
+.sw { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: pointer; }
+.sw.pill { max-width: 56px; aspect-ratio: 2 / 1; border-radius: 6px; background: #111416; position: relative; box-shadow: inset 0 2px 5px #000, 0 1px 0 #4A5055; }
+.sw.pill::after { content: ""; position: absolute; top: 10%; left: 5%; width: 44%; height: 80%; border-radius: 4px; background: linear-gradient(180deg, #F2F4F4, #A5ABAE); box-shadow: 0 2px 3px rgba(0,0,0,.6); transition: transform .1s; }
+.cell.on .sw.pill::after { transform: translateX(105%); }
+.sw.rocker { max-width: 44px; aspect-ratio: .8; border-radius: 6px; background: #111416; box-shadow: inset 0 2px 4px #000, 0 1px 0 #4A5055; perspective: 120px; display: grid; }
+.sw.rocker i { position: relative; margin: 4px; border-radius: 4px; background: linear-gradient(180deg, #3A3F44, #1B1E20); box-shadow: 0 2px 0 #000; transform: rotateX(20deg); transition: transform .09s; }
+.sw.rocker i::after { content: ""; position: absolute; left: 50%; top: 22%; width: 30%; aspect-ratio: 1; margin-left: -15%; border-radius: 50%; background: #555B60; }
+.cell.on .sw.rocker i { transform: rotateX(-20deg); }
+.cell.on .sw.rocker i::after { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+.sw.lever { max-width: 44px; aspect-ratio: 1; border-radius: 50%; position: relative; background: radial-gradient(circle at 50% 40%, #3A3F44, #14171A); box-shadow: inset 0 2px 4px #000, 0 1px 0 #4A5055; }
+.sw.lever i { position: absolute; left: 50%; bottom: 50%; width: 18%; height: 42%; margin-left: -9%; border-radius: 999px; background: linear-gradient(90deg, #F2F4F4, #9EA4A7); box-shadow: 0 2px 3px rgba(0,0,0,.5); transform-origin: 50% 100%; transform: rotate(32deg); transition: transform .1s cubic-bezier(.3,1.6,.5,1); }
+.sw.lever i::after { content: ""; position: absolute; top: -8%; left: 50%; width: 170%; aspect-ratio: 1; margin-left: -85%; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #A5ABAE 70%); }
+.cell.on .sw.lever i { transform: rotate(-32deg); }
+
+/* pen */
+.pen { border: 0; background: none; padding: 0; cursor: pointer; }
+.pen svg { height: clamp(240px, 44vh, 320px); width: auto; display: block; filter: drop-shadow(0 16px 10px rgba(0,0,0,.55)); transform: rotate(-12deg); }
+#penBtn { transform: translateY(var(--btn, 0px)); transition: transform .08s; }
+#penTip { transform: translateY(-30px); transition: transform .12s cubic-bezier(.3,1.6,.5,1); }
+.pen.out { --btn: 8px; }
+.pen.out #penTip { transform: translateY(0); }
+.pen.pressing { --btn: 15px; }
+
+.foot { margin: 0; padding-inline: 6px; font-size: 13px; font-weight: 500; color: #20261F; max-width: 70ch; }
+
+
+/* ai sound lab */
+.lab-in { width: min(100%, 560px); min-height: 44px; border: 0; border-radius: 6px; padding: 8px 14px; background: #0D0F11; box-shadow: inset 0 2px 6px #000, 0 0 0 2px var(--deck-line); font: 24px/1.1 var(--font-lcd); color: var(--amber); caret-color: var(--amber); }
+.lab-in::placeholder { color: #6F777C; }
+.lab-in:focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+.lab-note { margin: 0; min-height: 20px; font-size: 13px; font-weight: 500; color: var(--deck-soft); text-align: center; }
+.lab-note.err { color: var(--tomato); }
+.sel.clips button { padding-left: 14px; }
+.sel.clips button::before { display: none; }
+
+@media (max-width: 560px) {
+  .cluster { width: 100%; justify-content: space-around; gap: 10px; }
+  .grille { width: 56px; }
+  .deck { min-height: 0; }
+  .pad { font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+</style>
+
+<div class="app">
+  <div class="shell">
+    <i class="screw tl"></i><i class="screw tr"></i><i class="screw bl"></i><i class="screw br"></i>
+
+    <header class="head">
+      <div>
+        <h1>ASMR Playground</h1>
+        <p class="tag">Six toys, one sound desk. Best with headphones.</p>
+      </div>
+      <div class="grille" aria-hidden="true"></div>
+    </header>
+
+    <div class="panel">
+      <div class="lcd" aria-live="off">
+        <canvas id="scope" aria-hidden="true"></canvas>
+        <div class="lcd-text">
+          <div class="lcd-row"><span id="lcdTitle"></span><span id="lcdVol"></span></div>
+          <div class="lcd-status" id="lcdStatus"></div>
+        </div>
+      </div>
+      <div class="cluster">
+        <div class="ctl">
+          <div class="knob" id="knob" role="slider" tabindex="0" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="70">
+            <svg viewBox="0 0 80 80" id="ticks" aria-hidden="true"></svg>
+            <div class="cap" id="knobCap"><i></i></div>
+          </div>
+          <span class="lab">Volume</span>
+        </div>
+        <div class="ctl">
+          <button class="sound" id="muteBtn" type="button" role="switch" aria-checked="true" aria-label="Sound"><span class="led"></span></button>
+          <span class="lab">Sound</span>
+        </div>
+        <div class="ctl">
+          <div class="joy" id="joy" role="img" aria-label="Joy meter"></div>
+          <span class="lab">Joy</span>
+        </div>
+      </div>
+    </div>
+
+    <nav class="pads" id="pads" role="tablist" aria-label="Choose a toy">
+      <button class="pad" role="tab" type="button" data-station="keys" aria-selected="true"><span class="led"></span><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M7 10h.01M11 10h.01M15 10h.01M8 14h8"/></svg>Keys</button>
+      <button class="pad" role="tab" type="button" data-station="pop" aria-selected="false"><span class="led"></span><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.5"/><circle cx="16" cy="8" r="3.5"/><circle cx="8" cy="16" r="3.5"/><circle cx="16" cy="16" r="3.5"/></svg>Pop-it</button>
+      <button class="pad" role="tab" type="button" data-station="wrap" aria-selected="false"><span class="led"></span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M8.5 9.5a4 4 0 0 1 3-2"/></svg>Wrap</button>
+      <button class="pad" role="tab" type="button" data-station="slime" aria-selected="false"><span class="led"></span><svg viewBox="0 0 24 24"><path d="M5 19c-1.5-5 1-7 3-8 0-4 2-7 4-7s4 3 4 7c2 1 4.5 3 3 8z"/></svg>Slime</button>
+      <button class="pad" role="tab" type="button" data-station="switch" aria-selected="false"><span class="led"></span><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="8" rx="2"/><path d="M13 8v8"/></svg>Switch</button>
+      <button class="pad" role="tab" type="button" data-station="pen" aria-selected="false"><span class="led"></span><svg viewBox="0 0 24 24"><path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/></svg>Pen</button>
+      <button class="pad" role="tab" type="button" data-station="lab" aria-selected="false"><span class="led"></span><svg viewBox="0 0 24 24"><path d="M4 14v-4M8 18V6M12 15V9M16 20V4M20 14v-4"/></svg>AI Lab</button>
+    </nav>
+
+    <main class="deck">
+      <section class="station" id="st-keys">
+        <p class="hint">Pick a switch, then type on your keyboard or tap the keys.</p>
+        <div class="sel" id="kindSeg" role="group" aria-label="Switch type">
+          <button type="button" data-kind="thocky" aria-pressed="true">Thocky</button>
+          <button type="button" data-kind="clacky" aria-pressed="false">Clacky</button>
+          <button type="button" data-kind="creamy" aria-pressed="false">Creamy</button>
+        </div>
+        <div class="typed" aria-label="Typed text"><span id="typed"></span></div>
+        <div class="kb" id="kb" data-kind="thocky"></div>
+      </section>
+
+      <section class="station" id="st-pop" hidden>
+        <p class="hint">Press the bubbles or drag across them. Pop all 36 and the board flips.</p>
+        <div class="popit-frame" id="popFrame"><div class="board popit" id="popBoard"></div></div>
+      </section>
+
+      <section class="station" id="st-wrap" hidden>
+        <p class="hint">Drag across the sheet for a crunchy run.</p>
+        <div class="sheet" id="wrapSheet"><div class="board wrapb" id="wrapBoard"></div></div>
+        <button class="btn" id="newSheet" type="button">New sheet</button>
+      </section>
+
+      <section class="station" id="st-slime" hidden>
+        <p class="hint">Grab it, stretch it, let go. Faster pulls sound wetter.</p>
+        <div class="slime-wrap"><canvas id="slimeCv" aria-label="Stretchy slime. Drag to pull it."></canvas></div>
+        <div class="chips" id="slimeDots" role="group" aria-label="Slime colour">
+          <button class="chip" type="button" data-c="#2D50F0" data-d="#1A2F99" style="background:#2D50F0" aria-label="Cobalt" aria-pressed="true"></button>
+          <button class="chip" type="button" data-c="#FFB320" data-d="#A56F00" style="background:#FFB320" aria-label="Amber" aria-pressed="false"></button>
+          <button class="chip" type="button" data-c="#F2552C" data-d="#98300F" style="background:#F2552C" aria-label="Tomato" aria-pressed="false"></button>
+          <button class="chip" type="button" data-c="#ECEEEE" data-d="#8E9396" style="background:#ECEEEE" aria-label="Paper" aria-pressed="false"></button>
+        </div>
+      </section>
+
+      <section class="station" id="st-switch" hidden>
+        <p class="hint">Flip them one at a time or send a wave across the wall.</p>
+        <div class="wall" id="wall"></div>
+        <button class="btn" id="flipAll" type="button">Flip all on</button>
+      </section>
+
+      <section class="station" id="st-pen" hidden>
+        <p class="hint">Click to push the tip out, click again to pull it back. Space works too.</p>
+        <button class="pen" id="pen" type="button" aria-pressed="false" aria-label="Retractable pen. Click to extend or retract the tip.">
+          <svg viewBox="0 0 120 330" aria-hidden="true">
+            <defs>
+              <linearGradient id="gBody" x1="0" x2="1"><stop offset="0" stop-color="#FAFBFB"/><stop offset=".55" stop-color="#DDE0E1"/><stop offset="1" stop-color="#A9AEB1"/></linearGradient>
+              <linearGradient id="gGrip" x1="0" x2="1"><stop offset="0" stop-color="#5873FF"/><stop offset="1" stop-color="#1F3ACB"/></linearGradient>
+            </defs>
+            <g id="penTip"><rect x="57" y="282" width="6" height="24" fill="#B9BEC1"/><path d="M57 306h6l-3 11z" fill="#16181A"/></g>
+            <path d="M34 250h52l-22 42h-8z" fill="#2B2F33"/>
+            <rect x="34" y="62" width="52" height="192" rx="12" fill="url(#gBody)"/>
+            <rect x="34" y="190" width="52" height="62" fill="url(#gGrip)"/>
+            <g stroke="rgba(0,0,0,.28)" stroke-width="2"><path d="M34 202h52M34 214h52M34 226h52M34 238h52"/></g>
+            <rect x="40" y="72" width="7" height="104" rx="3.5" fill="rgba(255,255,255,.7)"/>
+            <rect x="83" y="46" width="9" height="110" rx="4.5" fill="#FFB320"/>
+            <g id="penBtn"><rect x="46" y="24" width="28" height="44" rx="8" fill="#F2552C"/><rect x="51" y="30" width="6" height="22" rx="3" fill="rgba(255,255,255,.5)"/></g>
+          </svg>
+        </button>
+      </section>
+      <section class="station" id="st-lab" hidden>
+        <p class="hint">Describe a sound and the AI makes it for you. Try something tiny and satisfying.</p>
+        <input class="lab-in" id="labPrompt" type="text" maxlength="200" autocomplete="off" placeholder="Describe a sound" aria-label="Describe a sound">
+        <div class="sel" id="labIdeas" role="group" aria-label="Ideas">
+          <button type="button" data-p="soft rain on a tin roof">Rain on tin</button>
+          <button type="button" data-p="slow wet slime squish close to the microphone">Slime squish</button>
+          <button type="button" data-p="crisp page turn in a quiet library">Page turn</button>
+          <button type="button" data-p="gentle wooden spoon tapping a ceramic bowl">Spoon tap</button>
+        </div>
+        <div class="sel" id="labKeys" hidden>
+          <input class="lab-in" id="keyEl" type="password" autocomplete="off" placeholder="ElevenLabs key" aria-label="ElevenLabs API key">
+        </div>
+        <button class="btn" id="labGo" type="button">Generate</button>
+        <p class="lab-note" id="labNote" role="status"></p>
+        <div class="sel clips" id="labClips" role="group" aria-label="Your clips"></div>
+      </section>
+    </main>
+  </div>
+
+  <p class="foot">Preview sounds are generated in your browser. In the full build, each one is replaced by a clip made in ElevenLabs and loaded ahead of time, so nothing waits on a live call.</p>
+</div>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const rv = (a = 0.06) => 1 + (Math.random() * 2 - 1) * a;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const panOfX = (x) => clamp((x / innerWidth * 2 - 1) * 0.8, -0.8, 0.8);
+  const panOfEl = (el) => { const r = el.getBoundingClientRect(); return panOfX(r.left + r.width / 2); };
+
+  const stations = ['keys', 'pop', 'wrap', 'slime', 'switch', 'pen', 'lab'];
+  const names = { keys: 'Mechanical keyboard', pop: 'Pop-it', wrap: 'Bubble wrap', slime: 'Slime', switch: 'Switch wall', pen: 'Pen clicker', lab: 'AI sound lab' };
+  let current = 'keys';
+
+  /* ---------- sound engine (synthesized stand-ins for ElevenLabs clips) ---------- */
+  const Snd = (() => {
+    let ctx = null, master = null, analyser = null, noiseBuf = null, muted = false, vol = 0.7;
+    const gainOf = (v) => Math.pow(v, 1.6);
+    function ensure() {
+      if (!ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        ctx = new AC();
+        master = ctx.createGain();
+        master.gain.value = muted ? 0 : gainOf(vol);
+        const comp = ctx.createDynamicsCompressor();
+        master.connect(comp); comp.connect(ctx.destination);
+        analyser = ctx.createAnalyser(); analyser.fftSize = 1024; master.connect(analyser);
+        noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+        const d = noiseBuf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      }
+      if (ctx.state === 'suspended') ctx.resume();
+      return ctx;
+    }
+    const ready = () => !muted && !!ensure();
+    function sink(pan) {
+      const g = ctx.createGain();
+      if (ctx.createStereoPanner) {
+        const p = ctx.createStereoPanner();
+        p.pan.value = clamp(pan || 0, -1, 1);
+        g.connect(p); p.connect(master);
+      } else g.connect(master);
+      return g;
+    }
+    function env(g, t, v, dur, attack) {
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(Math.max(v, 0.0002), t + attack);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    }
+    function tone(o) {
+      const t = ctx.currentTime + (o.when || 0);
+      const osc = ctx.createOscillator();
+      osc.type = o.type || 'sine';
+      osc.frequency.setValueAtTime(o.f0, t);
+      if (o.f1) osc.frequency.exponentialRampToValueAtTime(Math.max(o.f1, 20), t + o.dur);
+      const g = sink(o.pan);
+      env(g, t, o.vol, o.dur, o.attack || 0.002);
+      osc.connect(g); osc.start(t); osc.stop(t + o.dur + 0.03);
+    }
+    function noise(o) {
+      const t = ctx.currentTime + (o.when || 0);
+      const src = ctx.createBufferSource();
+      src.buffer = noiseBuf;
+      const f = ctx.createBiquadFilter();
+      f.type = o.filter || 'bandpass';
+      f.frequency.setValueAtTime(o.f, t);
+      if (o.f1) f.frequency.exponentialRampToValueAtTime(o.f1, t + o.dur);
+      f.Q.value = o.q || 1;
+      const g = sink(o.pan);
+      env(g, t, o.vol, o.dur, o.attack || 0.001);
+      src.connect(f); f.connect(g);
+      src.start(t, Math.random() * 0.4); src.stop(t + o.dur + 0.03);
+    }
+
+    return {
+      unlock() { ensure(); },
+      async clip(arrayBuffer) {
+        if (!ready()) return 0;
+        const buf = await ctx.decodeAudioData(arrayBuffer.slice(0));
+        const src = ctx.createBufferSource(); src.buffer = buf;
+        src.connect(sink(0)); src.start();
+        return buf.duration;
+      },
+      analyser() { return analyser; },
+      isMuted() { return muted; },
+      setVol(v) { vol = v; if (master) master.gain.setTargetAtTime(muted ? 0 : gainOf(vol), ctx.currentTime, 0.02); },
+      setMuted(m) { muted = m; if (master) master.gain.setTargetAtTime(muted ? 0 : gainOf(vol), ctx.currentTime, 0.02); if (!m) ensure(); },
+      tick() {
+        if (!ready()) return;
+        noise({ f: 2600, q: 1.5, dur: 0.016, vol: 0.28 });
+        tone({ f0: 760, f1: 520, dur: 0.025, vol: 0.12 });
+      },
+      key(kind, pm, pan, big) {
+        if (!ready()) return;
+        pm *= rv(); const b = big ? 0.7 : 1;
+        if (kind === 'thocky') {
+          tone({ f0: 170 * pm * b, f1: 88 * pm * b, dur: big ? 0.17 : 0.12, vol: 0.55, pan });
+          tone({ type: 'triangle', f0: 112 * pm * b, f1: 68 * pm * b, dur: 0.09, vol: 0.28, pan });
+          noise({ filter: 'lowpass', f: 900, dur: 0.05, vol: 0.28, pan });
+        } else if (kind === 'clacky') {
+          noise({ f: 3200 * pm * b, q: 1.2, dur: 0.035, vol: 0.55, pan });
+          noise({ filter: 'highpass', f: 5200, dur: 0.016, vol: 0.28, pan });
+          tone({ type: 'square', f0: 1800 * pm * b, f1: 900, dur: 0.02, vol: 0.07, pan });
+          tone({ f0: 210 * pm * b, f1: 120, dur: 0.05, vol: 0.16, pan });
+        } else {
+          tone({ f0: 262 * pm * b, f1: 150 * b, dur: big ? 0.15 : 0.1, vol: 0.38, pan });
+          tone({ f0: 520 * pm * b, f1: 300, dur: 0.05, vol: 0.08, pan });
+          noise({ filter: 'lowpass', f: 1800, q: 0.5, dur: 0.06, vol: 0.16, pan });
+        }
+      },
+      keyUp(pm, pan) { if (!ready()) return; noise({ f: 2500 * pm, q: 1, dur: 0.018, vol: 0.1, pan }); },
+      pop(pm, pan) {
+        if (!ready()) return;
+        pm *= rv(0.1);
+        tone({ f0: 620 * pm, f1: 190 * pm, dur: 0.09, vol: 0.5, pan });
+        noise({ f: 1200, q: 1, dur: 0.02, vol: 0.2, pan });
+      },
+      unpop(pm, pan) {
+        if (!ready()) return;
+        pm *= rv(0.1);
+        tone({ f0: 200 * pm, f1: 430 * pm, dur: 0.08, vol: 0.34, pan });
+        noise({ filter: 'lowpass', f: 800, dur: 0.03, vol: 0.1, pan });
+      },
+      crunch(pan) {
+        if (!ready()) return;
+        const n = 2 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < n; i++) noise({ f: rnd(1400, 4200), q: 3, dur: rnd(0.02, 0.05), vol: 0.32, pan, when: i * rnd(0.008, 0.02) });
+        tone({ f0: rnd(800, 1100), f1: 400, dur: 0.03, vol: 0.14, pan });
+      },
+      crinkle() {
+        if (!ready()) return;
+        for (let i = 0; i < 14; i++) noise({ f: rnd(1200, 4500), q: 2.5, dur: rnd(0.02, 0.05), vol: 0.22, when: i * rnd(0.025, 0.04) });
+      },
+      sweep() {
+        if (!ready()) return;
+        noise({ f: 400, f1: 3200, q: 0.8, dur: 0.5, vol: 0.22 });
+        for (let i = 0; i < 8; i++) tone({ type: 'triangle', f0: 400 * Math.pow(1.12, i), dur: 0.09, vol: 0.12, when: i * 0.05 });
+      },
+      squelch(speed, pan) {
+        if (!ready()) return;
+        const f = rnd(120, 200);
+        tone({ f0: f, f1: f * rnd(1.8, 2.8), dur: 0.07, vol: clamp(0.15 + speed * 0.02, 0.15, 0.4), pan });
+        noise({ filter: 'lowpass', f: 600, f1: 1800, dur: 0.06, vol: 0.12, pan });
+      },
+      squish(pan) {
+        if (!ready()) return;
+        tone({ f0: 140, f1: 80, dur: 0.12, vol: 0.35, pan });
+        noise({ filter: 'lowpass', f: 500, dur: 0.1, vol: 0.2, pan });
+      },
+      snap(pan) {
+        if (!ready()) return;
+        tone({ f0: 90, f1: 320, dur: 0.06, vol: 0.3, pan });
+        noise({ f: 900, q: 2, dur: 0.05, vol: 0.3, pan });
+        tone({ f0: 260, f1: 120, dur: 0.1, vol: 0.35, pan, when: 0.08 });
+      },
+      sw(type, col, on, pan) {
+        if (!ready()) return;
+        const pm = (1 + col * 0.06) * (on ? 1.08 : 1) * rv(0.03);
+        if (type === 'pill') {
+          noise({ f: 3000, q: 1.5, dur: 0.022, vol: 0.4, pan });
+          tone({ f0: 900 * pm, f1: 500, dur: 0.03, vol: 0.15, pan });
+          tone({ f0: 140 * pm, f1: 90, dur: 0.04, vol: 0.2, pan });
+        } else if (type === 'rocker') {
+          noise({ f: 1800 * pm, dur: 0.035, vol: 0.5, pan });
+          tone({ type: 'triangle', f0: 220 * pm, f1: 110, dur: 0.07, vol: 0.35, pan });
+          noise({ filter: 'highpass', f: 4500, dur: 0.012, vol: 0.2, pan, when: 0.045 });
+        } else {
+          tone({ f0: 1500 * pm, f1: 1200, dur: 0.12, vol: 0.07, pan });
+          noise({ f: 1000, dur: 0.03, vol: 0.45, pan });
+          tone({ f0: 110 * pm, f1: 70, dur: 0.08, vol: 0.35, pan });
+        }
+      },
+      pen(out, pan) {
+        if (!ready()) return;
+        if (out) {
+          noise({ f: 4200, q: 2, dur: 0.014, vol: 0.55, pan });
+          tone({ type: 'square', f0: 2200, f1: 1400, dur: 0.012, vol: 0.06, pan });
+          noise({ f: 2400, dur: 0.022, vol: 0.4, pan, when: 0.045 });
+          tone({ f0: 320, f1: 200, dur: 0.05, vol: 0.25, pan, when: 0.045 });
+        } else {
+          noise({ f: 2000, dur: 0.022, vol: 0.4, pan });
+          tone({ f0: 260, f1: 170, dur: 0.06, vol: 0.3, pan });
+          noise({ filter: 'highpass', f: 5000, dur: 0.01, vol: 0.2, pan, when: 0.05 });
+        }
+      },
+      chime() {
+        if (!ready()) return;
+        [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone({ f0: f, dur: 1.3, vol: 0.14, attack: 0.01, when: i * 0.09 }));
+      }
+    };
+  })();
+
+  document.addEventListener('pointerdown', () => Snd.unlock(), { passive: true });
+  document.addEventListener('keydown', () => Snd.unlock());
+
+  /* ---------- screen text ---------- */
+  const lcdTitle = $('#lcdTitle'), lcdStatus = $('#lcdStatus'), lcdVol = $('#lcdVol');
+  const status = {};
+  let flashMsg = '', flashTimer = 0;
+  function lcdRender() {
+    lcdTitle.textContent = flashMsg || names[current];
+    lcdStatus.textContent = flashMsg ? 'Full marks for calm.' : (status[current] || '');
+  }
+  function setStatus(id, text) { status[id] = text; if (id === current && !flashMsg) lcdRender(); }
+  function flash(msg) {
+    flashMsg = msg; lcdRender();
+    clearTimeout(flashTimer); flashTimer = setTimeout(() => { flashMsg = ''; lcdRender(); }, 2200);
+  }
+
+  /* ---------- waveform screen (reads the real output of the sound engine) ---------- */
+  const scope = $('#scope'), sc = scope.getContext('2d');
+  const samples = new Uint8Array(1024);
+  let sw = 0, sh = 0, disp = new Float32Array(0);
+  const COL = 4, GAP = 1;
+  function scopeResize() {
+    const r = scope.getBoundingClientRect(); if (!r.width) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    sw = r.width; sh = r.height;
+    scope.width = Math.round(sw * dpr); scope.height = Math.round(sh * dpr);
+    sc.setTransform(dpr, 0, 0, dpr, 0, 0);
+    disp = new Float32Array(Math.floor(sw / (COL + GAP)));
+  }
+  function scopeDraw() {
+    requestAnimationFrame(scopeDraw);
+    if (document.hidden || !sw) return;
+    sc.clearRect(0, 0, sw, sh);
+    const base = sh * 0.76, amp = sh * 0.22, an = Snd.analyser(), n = disp.length;
+    if (an) an.getByteTimeDomainData(samples);
+    for (let i = 0; i < n; i++) {
+      let p = 0;
+      if (an) {
+        const s0 = Math.floor(i * samples.length / n), s1 = Math.floor((i + 1) * samples.length / n);
+        for (let j = s0; j < s1; j++) { const v = Math.abs(samples[j] - 128) / 128; if (v > p) p = v; }
+      }
+      disp[i] = Math.max(p, disp[i] * 0.88);
+      let hh = Math.round(Math.min(amp, disp[i] * amp * 2.4) / 3) * 3;
+      const live = hh > 0;
+      if (!live) hh = 1.5;
+      sc.fillStyle = live ? 'rgba(255,179,32,.95)' : 'rgba(255,179,32,.25)';
+      sc.fillRect(i * (COL + GAP), base - hh, COL, hh * 2);
+    }
+  }
+  scopeResize(); requestAnimationFrame(scopeDraw);
+  window.addEventListener('resize', scopeResize);
+
+  /* ---------- joy meter ---------- */
+  const joyEl = $('#joy'); let calm = 0, calmLock = false;
+  const joyLeds = [];
+  for (let i = 0; i < 12; i++) { const s = document.createElement('i'); if (i > 9) s.className = 'hot'; joyEl.appendChild(s); joyLeds.push(s); }
+  function joyRender() {
+    const lit = Math.floor(calm / 100 * 12 + 0.0001);
+    joyLeds.forEach((s, i) => s.classList.toggle('on', i < lit));
+  }
+  function joy(n) {
+    if (calmLock) return;
+    calm = Math.min(100, calm + n); joyRender();
+    if (calm >= 100) {
+      calmLock = true; Snd.chime(); flash('Joy meter full');
+      setTimeout(() => { calm = 0; joyRender(); calmLock = false; }, 2200);
+    }
+  }
+
+  /* ---------- volume knob and sound switch ---------- */
+  const knob = $('#knob'), knobCap = $('#knobCap'), muteBtn = $('#muteBtn');
+  let volume = 70, kd = null;
+  (function ticks() {
+    let s = '';
+    for (let i = 0; i <= 10; i++) {
+      const a = (-135 + i * 27) * Math.PI / 180;
+      const x1 = 40 + Math.sin(a) * 34, y1 = 40 - Math.cos(a) * 34, x2 = 40 + Math.sin(a) * 39, y2 = 40 - Math.cos(a) * 39;
+      s += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" stroke="#16181A" stroke-width="' + (i % 5 === 0 ? 2.4 : 1.4) + '" stroke-linecap="round"/>';
+    }
+    $('#ticks').innerHTML = s;
+  })();
+  function setVolume(v) {
+    volume = clamp(Math.round(v), 0, 100);
+    knobCap.style.transform = 'rotate(' + (-135 + volume * 2.7) + 'deg)';
+    knob.setAttribute('aria-valuenow', String(volume));
+    Snd.setVol(volume / 100);
+    lcdVol.textContent = 'Vol ' + volume;
+  }
+  knob.addEventListener('pointerdown', (e) => { e.preventDefault(); try { knob.setPointerCapture(e.pointerId); } catch (_) {} kd = { y: e.clientY, v: volume }; });
+  knob.addEventListener('pointermove', (e) => { if (kd) setVolume(kd.v + (kd.y - e.clientY) * 0.8); });
+  const kEnd = () => { if (kd) { kd = null; Snd.tick(); } };
+  knob.addEventListener('pointerup', kEnd); knob.addEventListener('pointercancel', kEnd);
+  knob.addEventListener('keydown', (e) => {
+    const k = e.key; let d = 0;
+    if (k === 'ArrowUp' || k === 'ArrowRight') d = 5; else if (k === 'ArrowDown' || k === 'ArrowLeft') d = -5;
+    else if (k === 'Home') { setVolume(0); e.preventDefault(); return; } else if (k === 'End') { setVolume(100); e.preventDefault(); return; }
+    if (d) { e.preventDefault(); setVolume(volume + d); }
+  });
+  knob.addEventListener('wheel', (e) => { e.preventDefault(); setVolume(volume + (e.deltaY < 0 ? 3 : -3)); }, { passive: false });
+  setVolume(70);
+  muteBtn.addEventListener('click', () => {
+    const on = muteBtn.getAttribute('aria-checked') !== 'true';
+    muteBtn.setAttribute('aria-checked', String(on));
+    Snd.setMuted(!on);
+    if (on) Snd.tick();
+  });
+
+  /* ---------- keyboard station ---------- */
+  const kb = $('#kb'), typedEl = $('#typed');
+  let kind = 'thocky', buf = '', presses = 0;
+  const keyEls = {};
+  ['1234567890', 'QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'].forEach((row) => {
+    const r = document.createElement('div'); r.className = 'krow';
+    row.split('').forEach((ch) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'key'; b.dataset.k = ch; b.tabIndex = -1;
+      b.innerHTML = '<span class="cap">' + ch + '</span>';
+      r.appendChild(b); keyEls[ch] = b;
+    });
+    kb.appendChild(r);
+  });
+  const sr = document.createElement('div'); sr.className = 'krow';
+  const space = document.createElement('button');
+  space.type = 'button'; space.className = 'key space'; space.dataset.k = ' '; space.tabIndex = -1;
+  space.innerHTML = '<span class="cap">space</span>';
+  sr.appendChild(space); kb.appendChild(sr); keyEls[' '] = space;
+
+  const keysText = () => setStatus('keys', kind[0].toUpperCase() + kind.slice(1) + ' switch, ' + presses + (presses === 1 ? ' key' : ' keys') + ' pressed');
+  const pitchFor = (ch) => 0.86 + (ch.charCodeAt(0) % 10) * 0.028;
+  function renderTyped() { typedEl.textContent = buf.slice(-28); }
+  function pressKey(el, pan) {
+    if (el.classList.contains('down')) return;
+    el.classList.add('down');
+    const k = el.dataset.k;
+    Snd.key(kind, pitchFor(k), pan, k === ' ');
+    buf += k; presses++; renderTyped(); keysText(); joy(0.8);
+  }
+  function releaseKey(el, pan) {
+    if (!el.classList.contains('down')) return;
+    el.classList.remove('down');
+    Snd.keyUp(pitchFor(el.dataset.k), pan);
+  }
+  Object.values(keyEls).forEach((el) => {
+    el.addEventListener('pointerdown', (e) => { e.preventDefault(); pressKey(el, panOfX(e.clientX)); });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach((ev) => el.addEventListener(ev, (e) => releaseKey(el, panOfX(e.clientX))));
+  });
+  $('#kindSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    kind = b.dataset.kind; kb.dataset.kind = kind;
+    $$('#kindSeg button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    keysText(); Snd.key(kind, 1, 0, false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (current !== 'keys' || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
+    if (t && t.closest && t.closest('#kindSeg, #muteBtn, #pads, #knob') && (e.key === ' ' || e.key === 'Enter' || e.key.indexOf('Arrow') === 0)) return;
+    const k = e.key.length === 1 ? e.key.toUpperCase() : e.key;
+    if (k === ' ') e.preventDefault();
+    if (keyEls[k]) pressKey(keyEls[k], 0);
+    else if (k === 'Backspace') { buf = buf.slice(0, -1); renderTyped(); Snd.key(kind, 0.9, 0, false); }
+    else if (k === 'Enter') { buf = ''; renderTyped(); Snd.key(kind, 0.75, 0, true); }
+  });
+  document.addEventListener('keyup', (e) => {
+    const k = e.key.length === 1 ? e.key.toUpperCase() : e.key;
+    if (keyEls[k]) releaseKey(keyEls[k], 0);
+  });
+  keysText();
+
+  /* ---------- bubble boards (pop-it and bubble wrap) ---------- */
+  function bubbleBoard(root, opt) {
+    const cells = []; let popped = 0, dragging = false, last = null;
+    for (let r = 0; r < opt.rows; r++) for (let c = 0; c < opt.cols; c++) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'bub'; b.setAttribute('aria-pressed', 'false');
+      b.setAttribute('aria-label', 'Bubble ' + (r * opt.cols + c + 1));
+      if (opt.color) b.style.setProperty('--b', opt.color(r, c));
+      root.appendChild(b); cells.push(b);
+    }
+    const total = cells.length;
+    function pop(el) {
+      if (el.classList.contains('popped')) return false;
+      el.classList.add('popped'); el.setAttribute('aria-pressed', 'true'); popped++;
+      opt.onPop(el, popped, total);
+      if (popped === total) opt.onClear();
+      return true;
+    }
+    function unpop(el) {
+      if (!opt.allowUnpop || !el.classList.contains('popped')) return;
+      el.classList.remove('popped'); el.setAttribute('aria-pressed', 'false'); popped--;
+      opt.onUnpop(el, popped, total);
+    }
+    root.addEventListener('pointerdown', (e) => {
+      const el = e.target.closest('.bub'); if (!el) return;
+      e.preventDefault(); dragging = true; last = el;
+      if (!pop(el)) unpop(el);
+    });
+    root.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const hit = document.elementFromPoint(e.clientX, e.clientY);
+      const b = hit && hit.closest ? hit.closest('.bub') : null;
+      if (b && b !== last && root.contains(b)) { last = b; pop(b); }
+    });
+    const stop = () => { dragging = false; last = null; };
+    window.addEventListener('pointerup', stop); window.addEventListener('pointercancel', stop);
+    root.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('bub')) {
+        e.preventDefault(); if (!pop(e.target)) unpop(e.target);
+      }
+    });
+    return {
+      total,
+      reset() { cells.forEach((c) => { c.classList.remove('popped'); c.setAttribute('aria-pressed', 'false'); }); popped = 0; },
+      get popped() { return popped; }
+    };
+  }
+
+  // pop-it
+  const bubbleColors = ['#2D50F0', '#ECEEEE', '#FFB320', '#F2552C'];
+  const popFrame = $('#popFrame');
+  let flips = 0, flipping = false;
+  const popText = () => setStatus('pop', pop.popped + ' of ' + pop.total + ' popped, ' + flips + (flips === 1 ? ' flip' : ' flips'));
+  const pop = bubbleBoard($('#popBoard'), {
+    rows: 6, cols: 6, allowUnpop: true,
+    color: (r, c) => bubbleColors[(r + c) % 4],
+    onPop: (el, n) => { Snd.pop(0.8 + (n % 6) * 0.07, panOfEl(el)); joy(1.2); popText(); },
+    onUnpop: (el) => { Snd.unpop(1, panOfEl(el)); popText(); },
+    onClear: () => {
+      if (flipping) return; flipping = true;
+      setTimeout(() => {
+        if (reduced) { Snd.sweep(); pop.reset(); flips++; popText(); flipping = false; joy(5); return; }
+        popFrame.classList.add('flip-out');
+        setTimeout(() => {
+          Snd.sweep(); pop.reset(); flips++; popText();
+          popFrame.classList.remove('flip-out'); popFrame.classList.add('flip-in');
+          setTimeout(() => { popFrame.classList.remove('flip-in'); flipping = false; joy(5); }, 400);
+        }, 290);
+      }, 450);
+    }
+  });
+  popText();
+
+  // bubble wrap
+  const wrapSheet = $('#wrapSheet');
+  let wrapBusy = false;
+  const wrapText = () => setStatus('wrap', wrap.popped + ' of ' + wrap.total + ' popped');
+  function newSheet() {
+    if (wrapBusy) return; wrapBusy = true;
+    wrapSheet.classList.add('fade'); Snd.crinkle();
+    setTimeout(() => { wrap.reset(); wrapText(); wrapSheet.classList.remove('fade'); wrapBusy = false; }, reduced ? 0 : 450);
+  }
+  const wrap = bubbleBoard($('#wrapBoard'), {
+    rows: 8, cols: 7, allowUnpop: false,
+    onPop: (el) => { Snd.crunch(panOfEl(el)); joy(0.7); wrapText(); },
+    onUnpop: () => {},
+    onClear: () => { joy(5); setTimeout(newSheet, 600); }
+  });
+  $('#newSheet').addEventListener('click', newSheet);
+  wrapText();
+
+  /* ---------- slime ---------- */
+  setStatus('slime', 'Drag to stretch, let go to snap back');
+  const slime = (() => {
+    const cv = $('#slimeCv'), c = cv.getContext('2d');
+    let W = 0, H = 0, R = 60, A = { x: 0, y: 0 }, P = { x: 0, y: 0 }, V = { x: 0, y: 0 }, pt = { x: 0, y: 0 };
+    let drag = false, squash = 0, lastG = 0, peak = 0, run = false, raf = 0;
+    let col = '#2D50F0', colD = '#1A2F99';
+    function resize() {
+      const r = cv.getBoundingClientRect(); if (!r.width) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = r.width; H = r.height;
+      cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+      c.setTransform(dpr, 0, 0, dpr, 0, 0);
+      A = { x: W / 2, y: H * 0.56 }; R = clamp(Math.min(W, H) * 0.17, 34, 70);
+      if (!drag) { P = { x: A.x, y: A.y }; V = { x: 0, y: 0 }; }
+    }
+    const local = (e) => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+    const panNow = () => clamp((P.x / (W || 1) * 2 - 1) * 0.8, -0.8, 0.8);
+    cv.addEventListener('pointerdown', (e) => {
+      e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+      drag = true; pt = local(e); peak = 0; squash = 1; Snd.squish(panOfX(e.clientX)); joy(1);
+    });
+    cv.addEventListener('pointermove', (e) => { if (drag) pt = local(e); });
+    const end = (e) => {
+      if (!drag) return; drag = false;
+      if (peak > R * 1.1) { Snd.snap(panOfX(e.clientX)); joy(1.5); }
+    };
+    cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+    $('#slimeDots').addEventListener('click', (e) => {
+      const b = e.target.closest('.chip'); if (!b) return;
+      col = b.dataset.c; colD = b.dataset.d;
+      $$('#slimeDots .chip').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      Snd.squish(0);
+    });
+    function ell(x, y, rx, ry, rot) { c.beginPath(); c.ellipse(x, y, Math.max(rx, 0.5), Math.max(ry, 0.5), rot || 0, 0, Math.PI * 2); }
+    function draw(now, d) {
+      c.clearRect(0, 0, W, H);
+      c.fillStyle = 'rgba(0,0,0,.35)';
+      ell(A.x, A.y + R * 1.0, R * 1.1, R * 0.28); c.fill();
+      if (d > 6) { ell(P.x, P.y + R * 0.85, R * 0.7, R * 0.2); c.fill(); }
+      const dx = P.x - A.x, dy = P.y - A.y, dist = Math.hypot(dx, dy) || 1;
+      const ux = dx / dist, uy = dy / dist, nx = -uy, ny = ux;
+      const breath = reduced ? 0 : Math.sin(now / 600) * 0.025;
+      const rx = R * (1 + 0.18 * squash - breath), ry = R * (1 - 0.2 * squash + breath);
+      const rP = R * (0.78 - Math.min(dist / (R * 7), 0.28));
+      const wA = R * 0.85, wP = rP * 0.9, wM = Math.max(R * 0.1, R * 0.62 / (1 + dist / (R * 0.8)));
+      const mx = (A.x + P.x) / 2, my = (A.y + P.y) / 2, cw = 2 * wM - 0.5 * (wA + wP);
+      const paths = [];
+      const body = new Path2D(); body.ellipse(A.x, A.y, rx, ry, 0, 0, Math.PI * 2); paths.push(body);
+      if (dist > 8) {
+        const neck = new Path2D();
+        neck.moveTo(A.x + nx * wA, A.y + ny * wA);
+        neck.quadraticCurveTo(mx + nx * cw, my + ny * cw, P.x + nx * wP, P.y + ny * wP);
+        neck.lineTo(P.x - nx * wP, P.y - ny * wP);
+        neck.quadraticCurveTo(mx - nx * cw, my - ny * cw, A.x - nx * wA, A.y - ny * wA);
+        neck.closePath(); paths.push(neck);
+        const tip = new Path2D(); tip.arc(P.x, P.y, rP, 0, Math.PI * 2); paths.push(tip);
+      }
+      c.lineJoin = 'round'; c.lineWidth = 8; c.strokeStyle = colD;
+      paths.forEach((p) => c.stroke(p));
+      c.fillStyle = col; paths.forEach((p) => c.fill(p));
+      c.fillStyle = 'rgba(255,255,255,.55)';
+      ell(A.x - rx * 0.38, A.y - ry * 0.45, rx * 0.2, ry * 0.1, -0.5); c.fill();
+      if (dist > 8) { ell(P.x - rP * 0.35, P.y - rP * 0.45, rP * 0.2, rP * 0.1, -0.5); c.fill(); }
+      c.fillStyle = 'rgba(255,255,255,.28)';
+      ell(A.x + rx * 0.3, A.y + ry * 0.25, R * 0.09, R * 0.09); c.fill();
+      ell(A.x - rx * 0.25, A.y + ry * 0.38, R * 0.05, R * 0.05); c.fill();
+    }
+    function loop(now) {
+      if (!run) return;
+      let tx = A.x, ty = A.y, k = 0.07, damp = 0.86;
+      if (drag) {
+        let dx = pt.x - A.x, dy = pt.y - A.y; const m = Math.hypot(dx, dy), max = R * 3.6;
+        if (m > max) { dx *= max / m; dy *= max / m; }
+        tx = A.x + dx; ty = A.y + dy; k = 0.2; damp = 0.7;
+      }
+      V.x = (V.x + (tx - P.x) * k) * damp; V.y = (V.y + (ty - P.y) * k) * damp;
+      P.x += V.x; P.y += V.y;
+      const sp = Math.hypot(V.x, V.y), d = Math.hypot(P.x - A.x, P.y - A.y);
+      peak = Math.max(peak, d);
+      if (drag && sp > 1.5 && now - lastG > Math.max(45, 150 - sp * 7)) { lastG = now; Snd.squelch(sp, panNow()); }
+      squash *= 0.86;
+      draw(now, d);
+      raf = requestAnimationFrame(loop);
+    }
+    return {
+      start() { if (run) return; run = true; resize(); raf = requestAnimationFrame(loop); },
+      stop() { run = false; cancelAnimationFrame(raf); },
+      resize() { if (run) resize(); }
+    };
+  })();
+  window.addEventListener('resize', () => slime.resize());
+
+  /* ---------- switch wall ---------- */
+  const wall = $('#wall'), flipBtn = $('#flipAll');
+  const swTypes = ['pill', 'rocker', 'lever'];
+  const swList = [];
+  const startOn = ['0-0', '0-3', '1-2', '2-1', '2-4'];
+  swTypes.forEach((type, r) => {
+    for (let c = 0; c < 5; c++) {
+      const cell = document.createElement('div'); cell.className = 'cell';
+      const led = document.createElement('span'); led.className = 'led';
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'sw ' + type; b.setAttribute('role', 'switch');
+      b.setAttribute('aria-label', (type === 'pill' ? 'Slide' : type === 'rocker' ? 'Rocker' : 'Lever') + ' switch ' + (c + 1));
+      b.innerHTML = type === 'pill' ? '' : '<i></i>';
+      cell.append(led, b); wall.appendChild(cell);
+      const item = { cell, b, type, col: c };
+      const on = startOn.includes(r + '-' + c);
+      cell.classList.toggle('on', on); b.setAttribute('aria-checked', String(on));
+      swList.push(item);
+    }
+  });
+  const isOn = (s) => s.cell.classList.contains('on');
+  function swState() {
+    const n = swList.filter(isOn).length;
+    setStatus('switch', n + ' of ' + swList.length + ' on');
+    flipBtn.textContent = n === swList.length ? 'Flip all off' : 'Flip all on';
+  }
+  function setSw(s, on, quiet) {
+    s.cell.classList.toggle('on', on); s.b.setAttribute('aria-checked', String(on));
+    Snd.sw(s.type, s.col, on, panOfEl(s.b));
+    if (!quiet) joy(0.8);
+    swState();
+  }
+  swList.forEach((s) => {
+    s.b.addEventListener('pointerdown', (e) => { e.preventDefault(); setSw(s, !isOn(s)); });
+    s.b.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) { e.preventDefault(); setSw(s, !isOn(s)); }
+    });
+  });
+  swState();
+  flipBtn.addEventListener('click', () => {
+    if (flipBtn.disabled) return;
+    const target = !swList.every(isOn);
+    flipBtn.disabled = true; let i = 0;
+    swList.forEach((s) => {
+      if (isOn(s) === target) return;
+      setTimeout(() => setSw(s, target, true), i * 85); i++;
+    });
+    joy(2);
+    setTimeout(() => { flipBtn.disabled = false; swState(); }, i * 85 + 120);
+  });
+
+  /* ---------- pen clicker ---------- */
+  const pen = $('#pen');
+  let penOut = false, clicks = 0;
+  const penText = () => setStatus('pen', clicks + (clicks === 1 ? ' click' : ' clicks') + ', tip ' + (penOut ? 'out' : 'in'));
+  function clickPen() {
+    penOut = !penOut; clicks++;
+    pen.classList.toggle('out', penOut); pen.setAttribute('aria-pressed', String(penOut));
+    pen.classList.add('pressing'); setTimeout(() => pen.classList.remove('pressing'), 90);
+    penText(); Snd.pen(penOut, panOfEl(pen)); joy(1);
+  }
+  pen.addEventListener('pointerdown', (e) => { e.preventDefault(); clickPen(); });
+  pen.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) { e.preventDefault(); clickPen(); } });
+  document.addEventListener('keydown', (e) => {
+    if (current !== 'pen' || e.key !== ' ' || e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
+    const t = e.target; if (t && (t.tagName === 'INPUT' || (t.closest && t.closest('button, #knob')))) return;
+    e.preventDefault(); clickPen();
+  });
+  penText();
+
+  /* ---------- AI sound lab (ElevenLabs sound generation) ---------- */
+  const labIn = $('#labPrompt'), labGo = $('#labGo'), labNote = $('#labNote'), labClips = $('#labClips');
+  const labKeys = $('#labKeys'), keyEl = $('#keyEl');
+  const clipStore = [];
+  function labMsg(t, err) { labNote.textContent = t; labNote.classList.toggle('err', !!err); }
+  $$('#labIdeas button').forEach((b) => b.addEventListener('click', () => { labIn.value = b.dataset.p; labIn.focus(); }));
+  function addClip(prompt, data) {
+    clipStore.unshift({ prompt, data });
+    labClips.textContent = '';
+    clipStore.slice(0, 6).forEach((c) => {
+      const b = document.createElement('button'); b.type = 'button';
+      b.textContent = c.prompt.length > 22 ? c.prompt.slice(0, 21) + '\u2026' : c.prompt;
+      b.title = c.prompt;
+      b.addEventListener('click', () => { Snd.clip(c.data); joy(1); });
+      labClips.appendChild(b);
+    });
+  }
+  async function fetchSound(direct, prompt) {
+    const r = direct
+      ? await fetch('https://api.elevenlabs.io/v1/sound-generation', { method: 'POST', headers: { 'xi-api-key': keyEl.value.trim(), 'Content-Type': 'application/json' }, body: JSON.stringify({ text: prompt, duration_seconds: 3, prompt_influence: 0.5 }) })
+      : await fetch('/api/sound', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt }) });
+    if (!r.ok) {
+      if (direct) {
+        let why = ''; try { const j = await r.json(); why = (j.detail && (j.detail.message || j.detail.status)) || (typeof j.detail === 'string' ? j.detail : ''); } catch (_) {}
+        throw new Error('ElevenLabs said no (' + r.status + ')' + (why ? ': ' + String(why).slice(0, 140) : '. Check the key and credits.'));
+      }
+      let m = 'Something went wrong.'; try { m = (await r.json()).error || m; } catch (_) {}
+      throw new Error(m);
+    }
+    return r.arrayBuffer();
+  }
+  async function generate() {
+    const prompt = labIn.value.trim();
+    if (!prompt) { labMsg('Type a sound first.', true); return; }
+    if (labGo.disabled) return;
+    // Direct mode: page opened as a file, or no server found and a key was pasted here.
+    const direct = location.protocol === 'file:' || (!labKeys.hidden && !!keyEl.value.trim());
+    if (location.protocol === 'file:') labKeys.hidden = false;
+    if (direct && !keyEl.value.trim()) { labMsg('Paste your ElevenLabs key in the box below, then press Generate.', true); return; }
+    labGo.disabled = true; labGo.textContent = 'Generating...'; labMsg('Asking the AI...');
+    try {
+      const data = await fetchSound(direct, prompt);
+      const dur = await Snd.clip(data);
+      addClip(prompt, data); joy(3);
+      labMsg(dur ? 'Playing ' + dur.toFixed(1) + 's. Tap a clip below to replay.' : 'Sound is off. Turn the Sound switch on and tap the clip below.');
+    } catch (e) {
+      if (!direct && e.message === 'Failed to fetch') { labKeys.hidden = false; labMsg('No server found. Paste your ElevenLabs key in the box below and press Generate again.', true); }
+      else labMsg(e.message === 'Failed to fetch' ? 'Could not reach the AI. Check your internet and key.' : e.message, true);
+    } finally { labGo.disabled = false; labGo.textContent = 'Generate'; }
+  }
+  labGo.addEventListener('click', generate);
+  labIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); generate(); } });
+
+  /* ---------- pads ---------- */
+  const pads = $$('.pad');
+  function show(id, quiet) {
+    current = id;
+    stations.forEach((s) => { $('#st-' + s).hidden = s !== id; });
+    pads.forEach((t) => { const on = t.dataset.station === id; t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1; });
+    if (id === 'slime') slime.start(); else slime.stop();
+    lcdRender();
+    if (!quiet) Snd.tick();
+    try { history.replaceState(null, '', '#' + id); } catch (_) {}
+  }
+  pads.forEach((t) => t.addEventListener('click', () => show(t.dataset.station)));
+  $('#pads').addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    const i = stations.indexOf(current), n = (i + (e.key === 'ArrowRight' ? 1 : stations.length - 1)) % stations.length;
+    show(stations[n]); pads[n].focus();
+  });
+  let initial = 'keys';
+  try { const h = (location.hash || '').slice(1); if (stations.includes(h)) initial = h; } catch (_) {}
+  show(initial, true);
+  scopeResize();
+})();
+</script>
+
+</body></html>
